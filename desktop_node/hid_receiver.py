@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import socket
-import struct
 import threading
 import sys
 import os
@@ -16,39 +15,24 @@ PORT = 9876
 LOG_FILE = "/tmp/pikm-node.log"
 VERSION = "1.0.0"
 
-WORDMARK_B64 = """iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAABiUlEQVR4nO3TP2xOYRQG8N93P7o0GmFjaMRCooLEKCYLQxMGiejAKHQgJjEJkRgNVgwk0qGzVtOIRiQGbZogaFhYWFT81ytv81y5EQODoUlPcnPfc857znme857DsixZ6WDFH+w/0MUCqvwXcr/bOndaPi3//0V8DivRE6SPMIEzuI79mMI4VuE0nuIjtmMMd5Ov+E82XajxHS/wLvox3MH+6OcTOBl9G0Zznmq15XBsdZWkl7ARA9FX4xbe4AvmcQG7sSusxLcTm5PwKD7jU4P4ZlAcin45/xNJvogiNIsUQLdxH29xFmty50Za+iuozvcKB1L1CD5gBA/xOAkK7XtJcgWzuIg5HEyeRepXsQlb0Je2lKpD+Ibj6E/AaKvfpeDW2L/iFPaUnFXmbh5PUvk9ekO3Jy+8IUyGMZgWFUDrMYPXmaxreZ9uobQPL0OzCtLePNR0ED3HsyAriDoBU/QH2IG16fu6jOE/z/1f+ZsVrFtr2dibVa5+87dXtm7d6YRtE7ssS1V+Ai4acyPKsCkCAAAAAElFTkSuQmCC"""
+WORDMARK_B64 = """iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAABj0lEQVRYhe1X7W2DMBB9VF3AK3QFVqAj0BHaEcgI6QhkBBiBjJCMkIwAI1x/+CyuV9uYAiKV+iQLGz/Hz/fBORkRYU887br7owqgQOsBNAByxauWCHiewTUASu6/Ldk0VcAVwEGMGxZR8PiVn/dFCohIN4dOve/EnORVnt9Ibg8ZhCGYLQTEYqCAjXKN65oC5rpgAPC5poA5WQAA5zU3nxIwbLGhxp/Kgk3gc0GWuDaVF8XuFohVw069z2EroquMFb5Xy1BVPCqe2i2tFhgiuom5gpvEJfC97xVvdi0wbI0XHn/An5654DiUmPiEpwg4YryEHACcItx3j4A4Ii64EVEjxrXiSRc0Yo10m1zrdUFMgETv4UkBpegXPF8F5pNjYMBY+Qy7IoSW+dLs7nkSc7Nc0LEZL+okPgtAmLknolxZRHOTs2CAjXqHGj8jXVoBsNaquX/HREFLyQJZlg3s5dSHM8YLqsuaWMYkCwDsJcSdMEc4HtqJ8a8FANYV7oQV/K6QJ26RcGXP6P/P6c74AgdUZ7tS9gHVAAAAAElFTkSuQmCC"""
+
+WORDMARK_B64_WIN = """iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAACJklEQVRYhe2WoY/yMBjGn/tybmj+AMQkeIIBBQK5pJYENzRuCoUAt4SEkaDIMosZhoSEzU+hNj8EqtX9xGXNyq0cHBDuknuSJrR9+vZX9nbv3gBwvFD/Xrn5zwTgnBc2SimCIAAhRPI5jnMXwPu1Rk3TUK/XAQCu69616VUASZJgOp2K/ng8hqZpqNVqAIDBYAAAOBwOd0PwfMsURZE0HkWRmMv7HMfh5zFuaT8vCVUqlUpPAVDmQLVaxce/LStJkocC3PQIGGNYLpcPBbj6FgCAbdsP3fwiAKX0KRue6/fcgmfpDX/l+ExZlYuiSBonhIBSKiqj4zhStVRVRc/zJF+RvqwFuq7zNE3FnGma3DRNnlccx4Xvekqp5CvwXAbQdZ3HcSzGJ5MJB/AJgHPOW62WFMuyrE+emwF83y+sfEUAnudJsYIg+D5AmqZSAN/3JV8eIPOlaSo9tvxaFYDyFpTLZfEFxBhDu91WWeH7vlhjmiYAYDgcivkgCJRrlQCMMVH5NE2D53nKIKPRCIwxAEC32wUANJtNAMBms8HpdLodII5jdDodAWEYBizLUgba7/cAgEajAUIIKpUKAGC9XivXZLqYhIQQMUYpFZmez4HzfnZrspw49+KaHMjkui4WiwWAj0cxn88LfbZt43g8AsBNp7/qVdzv9xGGoQiuyofdbif1V6vVYwAAoNfriRMahiFOmddsNhO/wzDEdrv9Mu5fNXw5wH++PIOYmB3RxAAAAABJRU5ErkJggg=="""
 
 def _wordmark_path():
     path = "/tmp/pikm-wordmark.png"
-    if not os.path.exists(path):
-        import base64
-        with open(path, "wb") as f:
-            f.write(base64.b64decode(WORDMARK_B64))
+    import base64
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(WORDMARK_B64))
     return path
 
 
-def _load_wordmark_pil():
-    try:
-        from PIL import Image
-        import base64
-        from io import BytesIO
-        data = base64.b64decode(WORDMARK_B64)
-        img = Image.open(BytesIO(data))
-        return img
-    except Exception:
-        return None
-        data = base64.b64decode(WORDMARK_B64)
-        img = Image.open(BytesIO(data))
-        return img
-    except Exception:
-        return None
 backend = None
 _connected = False
 _connected_addr = None
 _connection_lock = threading.Lock()
 _listener_thread = None
 _stop_event = threading.Event()
-_log_handler = None
 
 _num_lock_on = True
 _caps_lock_held = False
@@ -92,7 +76,6 @@ def _preprocess_kbd(report: bytes) -> bytes:
 
 
 def _setup_logging():
-    global _log_handler
     logger = logging.getLogger("pikm")
     logger.setLevel(logging.DEBUG)
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
@@ -105,7 +88,6 @@ def _setup_logging():
     sh = logging.StreamHandler(sys.stderr)
     sh.setFormatter(fmt)
     logger.addHandler(sh)
-    _log_handler = sh
 
 
 def log(msg, level=logging.INFO):
@@ -124,10 +106,7 @@ def _recv_exact(conn, n):
 
 def _handle_connection(conn, addr):
     global _connected, _connected_addr
-    with _connection_lock:
-        _connected = True
-        _connected_addr = addr
-    log(f"Connection from {addr}")
+    is_real = False
     with conn:
         while not _stop_event.is_set():
             try:
@@ -135,6 +114,12 @@ def _handle_connection(conn, addr):
                 type_byte = _recv_exact(conn, 1)
                 if type_byte is None:
                     break
+                if not is_real:
+                    is_real = True
+                    with _connection_lock:
+                        _connected = True
+                        _connected_addr = addr
+                    log(f"Connection from {addr}")
                 msg_type = type_byte[0]
                 if msg_type == 0x00:
                     continue
@@ -160,12 +145,14 @@ def _handle_connection(conn, addr):
             except socket.timeout:
                 continue
             except Exception as e:
-                log(f"handler error: {e}", logging.ERROR)
+                if is_real:
+                    log(f"handler error: {e}", logging.ERROR)
                 break
-    with _connection_lock:
-        _connected = False
-        _connected_addr = None
-    log(f"Connection from {addr} closed")
+    if is_real:
+        with _connection_lock:
+            _connected = False
+            _connected_addr = None
+        log(f"Connection from {addr} closed")
 
 
 def _listener():
@@ -214,28 +201,19 @@ def run_tray():
         _run_pystray_tray()
 
 
-def _load_wordmark_nsimage():
-    try:
-        import AppKit
-        import base64
-        data = base64.b64decode(WORDMARK_B64)
-        img = AppKit.NSImage.alloc().initWithData_(data)
-        if img:
-            img.setTemplate_(True)
-        return img
-    except Exception:
-        return None
-
-
 def _load_wordmark_pil():
     try:
         from PIL import Image
         import base64
         from io import BytesIO
-        data = base64.b64decode(WORDMARK_B64)
+        data = base64.b64decode(WORDMARK_B64_WIN)
         img = Image.open(BytesIO(data))
+        if img.mode != "RGBA":
+            img = img.convert("RGBA")
+        log("Wordmark icon loaded for tray", logging.DEBUG)
         return img
-    except Exception:
+    except Exception as e:
+        log(f"Failed to load wordmark icon: {e}", logging.WARNING)
         return None
 
 
@@ -286,7 +264,14 @@ def _run_pystray_tray():
         pystray.MenuItem("Quit", on_quit),
     )
     icon = pystray.Icon("PiKM", icon_img, "PiKM Receiver", menu)
-    icon.run()
+    log("Starting pystray icon...", logging.DEBUG)
+    try:
+        icon.run()
+        log("pystray icon stopped", logging.DEBUG)
+    except Exception as e:
+        log(f"pystray icon error: {e}", logging.ERROR)
+        log("Falling back to CLI mode", logging.INFO)
+        run_cli()
 
 
 def main():
@@ -316,9 +301,12 @@ def main():
         except ImportError:
             pass
 
+    log(f"Tray detected={has_tray}, no_tray={bool(os.environ.get('PIKM_NO_TRAY'))}", logging.INFO)
+
     if has_tray and not os.environ.get("PIKM_NO_TRAY"):
         run_tray()
     else:
+        log("No tray available, running CLI mode", logging.INFO)
         run_cli()
 
 

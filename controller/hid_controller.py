@@ -7,6 +7,7 @@ Switch targets and manage nodes via HTTP on port 80.
 
 import socket
 import struct
+import sys
 import threading
 import time
 import json
@@ -14,7 +15,7 @@ import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import evdev
-from evdev import InputDevice, categorize, ecodes
+from evdev import InputDevice, ecodes
 from collections import deque
 
 # --- Configuration ---
@@ -234,7 +235,7 @@ send_to_node = node_conn.send
 node_online = {}
 node_online_lock = threading.Lock()
 _probe_history = {}
-_PROBE_HISTORY_LEN = 2
+_PROBE_HISTORY_LEN = 1
 _PROBE_FAIL_THRESHOLD = 1  # declare offline if >= N of last _PROBE_HISTORY_LEN probes failed
 
 
@@ -242,6 +243,7 @@ def _check_node_port(ip: str) -> bool:
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(2.0)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
         r = s.connect_ex((ip, NODE_PORT))
         s.close()
         return r == 0
@@ -254,16 +256,22 @@ def _check_all_nodes():
     while True:
         with config_lock:
             nodes = dict(config.get("nodes", {}))
+        with active_lock:
+            act = active_node
         fresh = {}
         for name, ip in nodes.items():
-            ok = _check_node_port(ip)
+            if name == act:
+                with node_conn.lock:
+                    ok = node_conn.sock is not None
+            else:
+                ok = _check_node_port(ip)
             hist = _probe_history.setdefault(name, deque(maxlen=_PROBE_HISTORY_LEN))
             hist.append(ok)
             fresh[name] = sum(hist) >= (_PROBE_HISTORY_LEN - _PROBE_FAIL_THRESHOLD + 1)
         with node_online_lock:
             node_online.clear()
             node_online.update(fresh)
-        time.sleep(3)
+        time.sleep(2)
 
 
 threading.Thread(target=_check_all_nodes, daemon=True).start()

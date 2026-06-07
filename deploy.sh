@@ -42,7 +42,7 @@ case "$ROLE" in
         scp services/hid-controller.service "$PI_USER@$HOST:/etc/systemd/system/hid-controller.service"
 
         echo "    Setting up service..."
-        ssh "$PI_USER@$HOST" bash -s <<'SSHEOF'
+        ssh "$PI_USER@$HOST" sudo bash -s <<'SSHEOF'
             set -euo pipefail
             chmod +x /usr/local/bin/hid_controller.py
             mkdir -p /etc/pikm
@@ -65,7 +65,7 @@ SSHEOF
         scp services/hid-node.service "$PI_USER@$HOST:/etc/systemd/system/hid-node.service"
 
         echo "    Setting up service and gadget..."
-        ssh "$PI_USER@$HOST" bash -s <<'SSHEOF'
+        ssh "$PI_USER@$HOST" sudo bash -s <<'SSHEOF'
             set -euo pipefail
             chmod +x /usr/local/bin/hid_node.py
             chmod +x /usr/local/bin/usb_gadget_setup.sh

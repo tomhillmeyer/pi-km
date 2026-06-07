@@ -1,13 +1,8 @@
-import struct
-import logging
-
 KEYBOARD_DEVICE = "/dev/hidg0"
 MOUSE_DEVICE = "/dev/hidg1"
 CONSUMER_DEVICE = "/dev/hidg2"
 
 _initialized = False
-
-log = logging.getLogger("pikm.linux")
 
 
 def init():

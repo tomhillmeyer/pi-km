@@ -72,17 +72,61 @@ TCP :9876, one type byte + fixed payload:
 | `0x02` | Mouse | 4 bytes (buttons, dx, dy, scroll) |
 | `0x03` | Consumer | 2 bytes (HID consumer usage, LE) |
 
+## Local Development
 
-## Testing
-### Deploy changes to a Pi controller/node
+### Clone the repo
 
-`./deploy.sh <ip> controller`
+```bash
+git clone https://github.com/tomhillmeyer/pi-km.git
+cd pi-km
+```
 
-`./deploy.sh <ip> node`
+### Install dependencies
 
-### Run the desktop node locally (macOS/Windows)
-`python3 pikm-node.py`
+**macOS:**
 
-### Send test reports to a node
-`python3 devtools/test_keyboard.py <node-ip>`
-`python3 devtools/test_mouse.py <node-ip>`
+```bash
+pip3 install -r desktop_node/requirements.txt
+pip3 install rumps pyobjc
+```
+
+**Windows:**
+
+```bash
+pip install -r desktop_node/requirements.txt
+pip install pystray Pillow
+```
+
+### Run the desktop node locally
+
+**macOS:**
+
+```bash
+python3 pikm-node.py
+```
+
+**Windows:**
+
+```bash
+python pikm-node.py
+```
+
+### Development test tools
+
+```bash
+python3 devtools/test_keyboard.py <node-ip>
+python3 devtools/test_mouse.py <node-ip>
+python3 devtools/send_report.py <host> <type_hex> <hex_bytes...>
+```
+
+### Deploy controller changes to a Pi
+
+```bash
+./deploy.sh <ip> controller
+```
+
+### Deploy node changes to a Pi
+
+```bash
+./deploy.sh <ip> node
+```
