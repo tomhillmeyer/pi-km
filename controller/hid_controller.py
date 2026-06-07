@@ -12,6 +12,7 @@ import threading
 import time
 import json
 import os
+import re
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import evdev
@@ -44,6 +45,10 @@ def save_config():
     config["active"] = active_node
     with open(CONFIG_FILE, "w") as f:
         json.dump(config, f, indent=2)
+
+
+def _valid_name(name):
+    return bool(re.match(r'^[a-zA-Z0-9_-]+$', name))
 
 
 
@@ -418,9 +423,8 @@ PAGE = """\
 </head>
 <body>
 <img class="logo" src="{{LOGO}}" alt="PiKM">
-<div id="msg" class="msg"></div>
 <form class="add-form" id="addForm">
-  <input type="text" id="nodeName" placeholder="name" required>
+  <input type="text" id="nodeName" placeholder="name" pattern="[a-zA-Z0-9_-]+" title="alphanumeric, underscore, hyphen only" required oninput="this.value=this.value.replace(/[^a-zA-Z0-9_\-]/g,'')">
   <input type="text" id="nodeIp" placeholder="ip" required>
   <button type="submit">+ add</button>
 </form>
@@ -428,6 +432,7 @@ PAGE = """\
   <tr><th></th><th>#</th><th>node</th><th>ip</th><th></th><th></th><th></th></tr>
   <tbody id="rows"></tbody>
 </table>
+<div id="msg" class="msg"></div>
 <div class="api">
   <code>GET /status</code><br>
   <code>GET /switch?target=&lt;node&gt;</code><br>
@@ -455,6 +460,7 @@ function editName(span, name) {
   span.replaceWith(input);
   input.focus();
   input.select();
+  input.addEventListener('input', () => { input.value = input.value.replace(/[^a-zA-Z0-9_\-]/g, ''); });
   function done() {
     editingName = false;
     const newName = input.value.trim();
@@ -663,6 +669,9 @@ class SwitchHandler(BaseHTTPRequestHandler):
             if not name or not ip:
                 self._text(400, "name and ip required")
                 return
+            if not _valid_name(name):
+                self._text(400, "Invalid name — alphanumeric, underscore, hyphen only")
+                return
             with config_lock:
                 nodes = config.setdefault("nodes", {})
                 if name not in nodes:
@@ -683,6 +692,9 @@ class SwitchHandler(BaseHTTPRequestHandler):
             new = data.get("new_name", "").strip()
             if not old or not new:
                 self._text(400, "name and new_name required")
+                return
+            if not _valid_name(new):
+                self._text(400, "Invalid name — alphanumeric, underscore, hyphen only")
                 return
             with config_lock:
                 nodes = config.get("nodes", {})
@@ -711,6 +723,9 @@ class SwitchHandler(BaseHTTPRequestHandler):
             name = params.get("name", [None])[0]
             if not name:
                 self._text(400, "name required")
+                return
+            if not _valid_name(name):
+                self._text(400, "Invalid name")
                 return
             with config_lock:
                 nodes = config.get("nodes", {})
