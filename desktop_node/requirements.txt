@@ -1,0 +1,14 @@
+# PiKM Node dependencies
+
+# macOS menu bar (optional, falls back to CLI)
+rumps
+
+# Windows system tray (optional, falls back to CLI)
+pystray
+pillow
+
+# Windows input injection (optional, falls back to CLI)
+pywin32  # on Windows only
+
+# macOS input injection (optional, auto-detected)
+pyobjc   # provides Quartz, AppKit

@@ -1,0 +1,11 @@
+[Unit]
+Description=HID Controller Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u /usr/local/bin/hid_controller.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=HID Node Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/hid_node.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

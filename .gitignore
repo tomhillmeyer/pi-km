@@ -1,0 +1,15 @@
+archive/
+CONTEXT.md
+__pycache__/
+*.pyc
+dist/
+BUILDS.md
+setup.py
+*.icns
+packaging/
+.DS_Store
+build/
+*.pyo
+*.egg-info/
+*.spec
+desktop_node/README.md
