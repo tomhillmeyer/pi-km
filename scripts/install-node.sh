@@ -15,6 +15,7 @@ curl -fsSL "$REPO_BASE/node/usb_gadget_setup.sh" -o /usr/local/bin/usb_gadget_se
 chmod +x /usr/local/bin/usb_gadget_setup.sh
 
 curl -fsSL "$REPO_BASE/services/hid-node.service" -o /etc/systemd/system/hid-node.service
+curl -fsSL "$REPO_BASE/services/pikm-usb-gadget.service" -o /etc/systemd/system/pikm-usb-gadget.service
 
 if ! grep -q "^dtoverlay=dwc2" /boot/config.txt 2>/dev/null; then
     echo "dtoverlay=dwc2" >> /boot/config.txt
@@ -24,12 +25,8 @@ if ! grep -q "modules-load=dwc2,libcomposite" /boot/cmdline.txt 2>/dev/null; the
     sed -i 's/rootwait/rootwait modules-load=dwc2,libcomposite/' /boot/cmdline.txt
 fi
 
-if ! grep -q "usb_gadget_setup.sh" /etc/rc.local 2>/dev/null; then
-    sed -i '/^exit 0/i /usr/local/bin/usb_gadget_setup.sh' /etc/rc.local
-fi
-
 systemctl daemon-reload
-systemctl enable --now hid-node
+systemctl enable --now pikm-usb-gadget hid-node
 
 echo ""
 echo "==> Node installed. Rebooting to activate USB gadget..."

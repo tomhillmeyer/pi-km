@@ -1,6 +1,7 @@
 [Unit]
 Description=HID Node Daemon
-After=network.target
+After=network.target pikm-usb-gadget.service
+Requires=pikm-usb-gadget.service
 
 [Service]
 ExecStart=/usr/bin/python3 /usr/local/bin/hid_node.py

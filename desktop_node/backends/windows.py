@@ -62,6 +62,10 @@ _last_mouse_state = 0
 def init():
     if not WINAPI_AVAILABLE:
         raise RuntimeError("Windows API not available")
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except Exception:
+        pass
 
 
 def _caps_lock_toggle():

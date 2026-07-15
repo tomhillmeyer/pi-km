@@ -61,8 +61,9 @@ SSHEOF
         echo "    Copying USB gadget setup..."
         scp node/usb_gadget_setup.sh "$PI_USER@$HOST:/usr/local/bin/usb_gadget_setup.sh"
 
-        echo "    Copying systemd service..."
+        echo "    Copying systemd services..."
         scp services/hid-node.service "$PI_USER@$HOST:/etc/systemd/system/hid-node.service"
+        scp services/pikm-usb-gadget.service "$PI_USER@$HOST:/etc/systemd/system/pikm-usb-gadget.service"
 
         echo "    Setting up service and gadget..."
         ssh "$PI_USER@$HOST" sudo bash -s <<'SSHEOF'
@@ -70,13 +71,8 @@ SSHEOF
             chmod +x /usr/local/bin/hid_node.py
             chmod +x /usr/local/bin/usb_gadget_setup.sh
 
-            # Ensure rc.local runs the gadget setup
-            if ! grep -q "usb_gadget_setup.sh" /etc/rc.local 2>/dev/null; then
-                sed -i '/^exit 0/i /usr/local/bin/usb_gadget_setup.sh' /etc/rc.local
-            fi
-
             systemctl daemon-reload
-            systemctl enable hid-node
+            systemctl enable pikm-usb-gadget hid-node
             systemctl restart hid-node
             echo "    Node service status:"
             systemctl --no-pager status hid-node
